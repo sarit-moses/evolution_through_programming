@@ -59,8 +59,8 @@ def strategy(my_history: List[str], opponent_history: List[str]) -> str:
     Output:
         Either "cooperate" or "defect" """
     opp_strategy = 'random'
-    if len(my_history) > 10 :
-        opp_strategy = detect_opponents_strategy(my_history, opponent_history)
+    if len(my_history) > 10:
+        opp_strategy = detect_opponents_strategy(my_history[-10:], opponent_history[-10:])
     if opp_strategy == 'random':
 
         # return random_choice(coop_probability=0.7, defect_probability=0.3)
@@ -95,6 +95,9 @@ def defect():
 
 def random_choice(coop_probability, defect_probability):
     return np.random.choice(['cooperate', 'defect'], p=[coop_probability, defect_probability])
+
+
+
 def detect_opponents_strategy(my_history, opponent_history):
     opp_strategy = 'random'
     opp_strategy = detect_always_defect(opponent_history, opp_strategy)
