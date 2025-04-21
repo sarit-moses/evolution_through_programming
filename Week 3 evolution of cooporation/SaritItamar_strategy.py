@@ -10,37 +10,28 @@
 ###################
 
 """
-Possible opponent strategies:
-  tit-for-tat: starts friendly, will defect after each defection, will cooporate after each cooporation
-      best counter-strategy: coopareta as much as possible (will lead to cooperation)
-  grim trigger: starts friendly, will cooporate until 1st defection and then will defect until the end
-      best counter-strategy: always cooperate, defecting once can be bad. if there is a time limit, can defect on last move. 
-  always defect: will always defect regardless of oponnent actions
-      best counter-strategy: always defect.
-  always cooperate: will always cooperate regardless of opponent actions
-      best counter-strategy: always defect
-  random: unpredictable, will choose randomly
-      hard to predict. no best counter-strategy
-  tit for two tats: cooperate unless oponnent defects twice in row, than defect. 
-      best counter-strategy: always cooperate but you can get away with an occasional defection
-      I think it might be better to defect and then cooperate repeatedly
-  pavlov: cooperates if both oponents used same move in previous step, else defect. 
-      best counter-strategy: cooperate. 
+Strategy explanation:
 
-by taking all the above data into account, the most reasonable behavior is probably to lead with two cooperations and then evaluate oponent's response. 
-normally the best strategy would be tit-for-tat (as a strategy for dealing with most possile oponent's strategies). 
-this strategy should perform very well agains almost all strategies, with a small loss on 1st round for always defect. 
-it will probably not have the best outcome agains always cooperate (because against it the best strategy is always defect) but also not the worst outcome. 
+We have come up with a list of possible strategies that may be used by our opponent: 
+    tit-for-tat: starts friendly and then will mirror our actions. 
+        Best counter-strategy: always cooperate. 
+    grim trigger: starts cooperation but after 1st defection by its opponent will keep defecting until the end of the game. 
+        Best counter-strategy: always cooperate
+    pavlov: cooperates if both opponents used same strategy in precious rounds, else defects. 
+        Best counter-strategy: always cooperate.
+    tit-for-two-tats: same as tit for tat, but will only defect after two consecutive defections by opponent. 
+        Best counter-strategy: always cooperate, but can randomly defect every once in a while. 
+    always cooperate: will always cooperate. 
+        Best counter-stategy: always defect.
+    always defect: will always defect. 
+        Best counter-strategy: always defect. 
+    random: chooses steps randomly. 
+        Best counter-strategy: this actually imitates many rounds of single iteration prisoner's dilemma, therefore best strategy is always defect. 
 
-try to implement - for dealing with a semi-random behavior that has a higher probability to one of the options: 
-after 10 rounds try to evaluate what is the oponnent's strategy.
-if found to be random - always defect (will have highest score).
+We start with tit-for-tat (would handle best most cases), and then re-evaluate the opponent's strategy from the 11th step forward before acting.
+Evaluation is based on the last 100 rounds of the game, to shorten runtime and to deal with a changing strategy (that changes in the middle of the game).
 
-
-* fix detect function
-* add opponent
-* build graphs - our points vs opponent poinst in time
-
+We have included in the submission an additional code file (arena.py) that runs our code against different strategies and produces a graph describing its performance. 
 """
 
 
