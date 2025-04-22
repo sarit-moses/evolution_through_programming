@@ -219,12 +219,12 @@ def plot_score_log(pointing_rules, opp_score_log, our_score_log, opp_strategy):
 
 
 def prisoner_dillema():
-    run_simulation_vs_always_defect('Prisoner Dillema', 1000)
-    run_simulation_vs_always_coop('Prisoner Dillema', 1000)
-    run_simulation_vs_tit_for_tat('Prisoner Dillema', 1000)
-    run_simulation_vs_tit_for_two_tat('Prisoner Dillema', 1000)
-    run_simulation_vs_random('Prisoner Dillema', 1000)
-    run_simulation_vs_changing_strategy('Prisoner Dillema', 1000)
+    run_simulation_vs_always_defect('Prisoner Dillema', 3000)
+    run_simulation_vs_always_coop('Prisoner Dillema', 3000)
+    run_simulation_vs_tit_for_tat('Prisoner Dillema', 3000)
+    run_simulation_vs_tit_for_two_tat('Prisoner Dillema', 3000)
+    run_simulation_vs_random('Prisoner Dillema', 3000)
+    run_simulation_vs_changing_strategy('Prisoner Dillema', 3000)
 
 if __name__ == '__main__':
     prisoner_dillema()
