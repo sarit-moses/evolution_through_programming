@@ -217,11 +217,6 @@ def plot_score_log(pointing_rules, opp_score_log, our_score_log, opp_strategy):
     plt.savefig(f'./scoring_plots/{pointing_rules}_vs_{opp_strategy}_plot.png')
 
 
-# tit_for_two_tat_opp = Player(strategy=SaritItamar_strategy.tit_for_two_tat)
-    # always_coop_opp = Player(strategy=SaritItamar_strategy.cooperarte)
-    # always_defect_opp = Player(strategy=SaritItamar_strategy.defect)
-    # random_opp = Player(strategy=SaritItamar_strategy.random_choice)
-
 
 def prisoner_dillema():
     run_simulation_vs_always_defect('Prisoner Dillema', 1000)
@@ -232,6 +227,4 @@ def prisoner_dillema():
     run_simulation_vs_changing_strategy('Prisoner Dillema', 1000)
 
 if __name__ == '__main__':
-    # run_simulation_vs_changing_strategy('Prisoner Dillema', 1000)
-    # run_simulation_vs_tit_for_tat('Prisoner Dillema', 1000)
     prisoner_dillema()
