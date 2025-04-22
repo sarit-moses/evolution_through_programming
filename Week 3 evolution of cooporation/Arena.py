@@ -1,4 +1,4 @@
-import SaritItamar_strategy
+import Sarit_and_Itamar_strategy_using_distances as SaritItamar_strategy
 import matplotlib.pyplot as plt
 
 class Player:
@@ -62,7 +62,7 @@ def run_simulation_vs_tit_for_tat(pointing_rules, number_of_rounds):
     opp_score_log = []
     for i in range(number_of_rounds):
         our_choice = us.strategy(our_history, tit_for_tat_opp_history)
-        tit_for_tat_opponent_choice = tit_for_tat_opp.strategy(tit_for_tat_opp_history, our_history)
+        tit_for_tat_opponent_choice = tit_for_tat_opp.strategy(our_history, tit_for_tat_opp_history)
 
         our_history.append(our_choice)
         tit_for_tat_opp_history.append(tit_for_tat_opponent_choice)

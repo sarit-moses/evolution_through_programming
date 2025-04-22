@@ -60,6 +60,14 @@ import random
 # start by cooperation. if opponent is tit-for-tat, the next round he will cooperate
 # this also applies to 2nd move, since the game in the 1st move will have a random start in any case.
 
+def grim_trigger(flag, opponent_history):
+    if opponent_history[-1] == 'defect':
+        flag = True
+    if flag == True:
+        return 'defect'
+    else:
+        return 'cooperate', flag
+
 
 def tit_for_tat(my_history, opponent_history):
     if random.random() < 0.03:
@@ -89,8 +97,8 @@ def cooperarte():
 
 
 def defect():
-    # if random.random() < 0.01:
-    #     return 'cooperate'
+    if random.random() < 0.01:
+        return 'cooperate'
     return 'defect'
 
 
@@ -235,7 +243,13 @@ def strategy(my_history: List[str], opponent_history: List[str]) -> str:
     Output:
         Either "cooperate" or "defect" """
     opp_strategy = 'random'
-    if len(my_history) > 10:
+    if len(my_history)<=1:
+        return 'cooperate'
+    elif 1<len(my_history) < 29:
+        return 'defect'
+    elif 29<=len(my_history)<30:
+        return 'cooperate'
+    else:
         opp_strategy = detect_opponents_strategy(my_history[-30:], opponent_history[-30:])
     if opp_strategy == 'random':
 
@@ -243,9 +257,11 @@ def strategy(my_history: List[str], opponent_history: List[str]) -> str:
 
         return tit_for_tat(my_history, opponent_history)
     elif opp_strategy == 'tit_for_tat':
-        return cooperarte()
-    elif opp_strategy == 'grim_trigger' or opp_strategy == 'always_defect' or opp_strategy == 'always_cooperate':
+        tit_for_tat(my_history, opponent_history)
+    elif opp_strategy == 'grim_trigger' or opp_strategy == 'always_defect':
         return defect()  # if we detected it, opponent is already in 'always_defect' mode
+    if opp_strategy == 'always_cooperate':
+        return defect()
     elif opp_strategy == 'tit_for_two_tat':
         if my_history[-1] == 'defect':
             return cooperarte()
