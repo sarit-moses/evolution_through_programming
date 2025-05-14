@@ -3,10 +3,10 @@
 # Nuc: The nucleotide being mutated into
 # Seq: The tRNA sequence
 # T0Read: Read number of each genotype at T0
-# Fit23: Relative fitness at 23°„C in YPD
-# Fit30: Relative fitness at 30°„C in YPD
-# FitDMSO: Relative fitness at 30°„C in YPD with 3% DMSO
-# Fit37: Relative fitness at 37°„C in YPD
+# Fit23: Relative fitness at 23°C in YPD
+# Fit30: Relative fitness at 30°C in YPD
+# FitDMSO: Relative fitness at 30°C in YPD with 3% DMSO
+# Fit37: Relative fitness at 37°C in YPD
 Num	Pos	Nuc	Seq	T0Read	Fit23	Fit30	FitDMSO	Fit37
 0	-1	V	GTTCCGTTGGCGTAATGGTAACGCGTCTCCCTCCTAAGGAGAAGACTGCGGGTTCGAGTCCCGTACGGAACG	24136130	1.0000	1.0000	1.0000	1.0000
 1	62	T	GTTCCGTTGGCGTAATGGTAACGCGTCTCCCTCCTAAGGAGAAGACTGCGGGTTCGAGTCCCTTACGGAACG	12692	1.0234	0.9989	0.9883	0.9767
