@@ -127,8 +127,8 @@ def init_population(L: int, N: int) -> Dict[str, List[float]]:
         seq: [0, raw_fitness[seq] / total_fitness]
         for seq in sequences
     }
-    founder_seq = random.choice(sequences)
-    # founder_seq = '1111'
+    # founder_seq = random.choice(sequences)
+    founder_seq = '0'*L
     population[founder_seq][
         0] = 1.0  # assign the entire population to be a single random sequence out of the possibilities.
     return population
@@ -139,21 +139,84 @@ def generate_fitness(sequence: str) -> float:
     Assigns fitness to a sequence, based on sequence properties but with some redomness.
     """
     num_ones = sequence.count('1')
-    # sequence_length = len(sequence)
+    # # sequence_length = len(sequence)
     # base_fitness = num_ones / sequence_length  # Calculate proportion of '1's
-    base_fitness = np.log(num_ones*100)
-    noise = random.uniform(-0.1, 0.1)  # Add a small amount of random noise
-    # noise = num_ones%2
-    fitness = (base_fitness + noise) # Scale to range between 0 and 2
-
-    # Ensure fitness stays within the bounds [0, 2]
-    fitness = max(0, fitness)
+    # base_fitness = np.log(num_ones*100)
+    # noise = random.uniform(-0.1, 0.1)  # Add a small amount of random noise
+    # # noise = num_ones%2
+    # fitness = (base_fitness + noise) # Scale to range between 0 and 2
+    #
+    # # Ensure fitness stays within the bounds [0, 2]
+    # fitness = max(0, fitness)
+    fitness = 1/2**len(sequence)
     return fitness
 
 
 ###########
 ### Run ###
 ###########
+
+def main():
+    # create initial population
+    population = init_population(args.sequence_length, args.population_size)
+    avg_fitness = [average_fitness(population)]  # initiate list with average fitness at t=0
+    # run simulation fot stated number of generations
+    population_history = pd.DataFrame(columns=population.keys())
+    for generation in range(args.generations):
+        f = average_fitness(population)
+        avg_fitness.append(f)
+        pop_fraction_dist = np.array([v[0] for v in population.values()])
+        population_history.loc[generation] = pop_fraction_dist / sum(pop_fraction_dist)
+        population = change_quasispecies(population, args.mutation_rate)
+
+        # print(sum(pop_fraction_dist))
+        # print(f)
+    # print(args.generations)
+    # plot the average fitness of the quasispecies over time
+    plt.plot(range(args.generations + 1), avg_fitness)
+    plt.xlabel("Generation")
+    plt.ylabel("Average Fitness")
+    plt.title(
+        f"Average Population Fitness Over Time for mutation rate = {args.mutation_rate} and sequence length = {args.sequence_length}")
+    plt.show()  # show the plot
+    fitnesses = [v[1] for v in population.values()]
+    # plot the frequency of the different populations
+    for species in population_history:
+        plt.plot(population_history[species],
+                 label=f"{str(species)} (fitness: {round(population.get(species)[1], 2)}")  # Add label for legend
+    plt.xlabel("Generation")
+    plt.ylabel("Frequency")
+    plt.title("Frequency of Different Populations Over Time")
+    plt.legend(title="Population")
+    plt.show()  # Show the second plot
+
+def main_until_convergence(q, seq_length, max_generations=10000, threshold=1e-4):
+    # Initialize population
+    population = init_population(seq_length, args.population_size)
+    avg_fitness = [average_fitness(population)]  # Store average fitness over time
+    population_history = pd.DataFrame(columns=population.keys())
+
+    prev_dist = np.array([v[0] for v in population.values()])
+    counter = 0
+
+    while counter < max_generations:
+        # Record current distribution
+        population_history.loc[counter] = prev_dist
+
+        # Update population
+        population = change_quasispecies(population, q)
+
+        # Get new distribution
+        new_dist = np.array([v[0] for v in population.values()])
+        avg_fitness.append(average_fitness(population))
+
+        # Check for convergence (based on distribution change)
+        if np.linalg.norm(new_dist - prev_dist) < threshold:
+            break
+
+        prev_dist = new_dist
+        counter += 1
+    return counter
 
 if __name__ == "__main__":
 
@@ -165,45 +228,25 @@ if __name__ == "__main__":
                         help="Length of the sequence (positive integer)")
     parser.add_argument("-q", "--mutation_rate", type=float, required=False, default=0.001,
                         help="Mutation rate (float between 0 and 1)")
-    parser.add_argument("-t", "--generations", type=int, required=False, default=1000,
+    parser.add_argument("-t", "--generations", type=int, required=False, default=100000,
                         help="Number of generatons i(positive integer)")
     args = parser.parse_args()
 
-    # create initial population
-    population = init_population(args.sequence_length, args.population_size)
-    avg_fitness = [average_fitness(population)]  # initiate list with average fitness at t=0
 
-    # run simulation fot stated number of generations
-    population_history = pd.DataFrame(columns=population.keys())
+    # main()
 
-    for generation in range(args.generations):
-        f = average_fitness(population)
-        avg_fitness.append(f)
-        pop_fraction_dist = np.array([v[0] for v in population.values()])
-        population_history.loc[generation] = pop_fraction_dist / sum(pop_fraction_dist)
-        population = change_quasispecies(population, args.mutation_rate)
 
-        # print(sum(pop_fraction_dist))
-        # print(f)
-
-    # print(args.generations)
-
-    # plot the average fitness of the quasispecies over time
-    plt.plot(range(args.generations + 1), avg_fitness)
-    plt.xlabel("Generation")
-    plt.ylabel("Average Fitness")
-    plt.title(
-        f"Average Population Fitness Over Time for mutation rate = {args.mutation_rate} and sequence length = {args.sequence_length}")
-    plt.show()  # show the plot
-
-    fitnesses = [v[1] for v in population.values()]
-    # plot the frequency of the different populations
-    for species in population_history:
-        plt.plot(population_history[species],
-                 label=f"{str(species)} (fitness: {round(population.get(species)[1], 2)}")  # Add label for legend
-
-    plt.xlabel("Generation")
-    plt.ylabel("Frequency")
-    plt.title("Frequency of Different Populations Over Time")
-    plt.legend(title="Population")
-    plt.show()  # Show the second plot
+    counter_history = []
+    mutation_rates = np.linspace(0.001, 0.5, 100)
+    for mutation_rate in mutation_rates:
+        counter_until_convergence = main_until_convergence(mutation_rate, seq_length= 5)
+        counter_history.append(counter_until_convergence)
+    lengths = [1,2,3,4,5,6,7,8,9,10,11,12]
+    plt.figure(figsize=(8, 5))
+    plt.plot(mutation_rates, counter_history)
+    plt.title("Effect of Mutation Rate on Time to Equilibrium")
+    plt.xlabel("Mutation Rate")
+    plt.ylabel("Generations Until Convergence")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
