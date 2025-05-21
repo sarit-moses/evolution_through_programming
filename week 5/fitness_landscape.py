@@ -54,26 +54,11 @@ def change_quasispecies(population: Dict[str, List[float]], q: float):
         # chance of this species to turn into other species (by mutations)
         c = population_fragment_i * (1 - (1 - q) ** len(seq_i))
 
-        # print(f"a={a}, b={b}, c={c}")
-
         temp_new_population[seq_i][0] += (a + b - c)  # assign new value to frequency of this quasispecies
-        # print("new frewuency")
-        # print(new_population[seq][0])
 
-    # new_population = normalize_new_population(temp_new_population)
     new_population = temp_new_population
     return new_population
 
-
-# def normalize_new_population(temp_new_population):
-#     fitness = np.array([v[1] for v in temp_new_population.values()])
-#     freq = np.array([v[0] for v in temp_new_population.values()])
-#
-#     freq += abs(min(freq))
-#     freq /= freq.sum()
-#
-#     updated_values = [list(x) for x in zip(freq, fitness)]
-#     return dict(zip(temp_new_population.keys(), updated_values))
 
 def get_distance(seq1, seq2):
     """
@@ -95,8 +80,6 @@ def average_fitness(population: Dict[str, List[float]]) -> float:
     f = 0.0
     for _, values in population.items():
         f += values[0] * values[1]  # multiply fitness of sequence by its relative frequency
-        # print(f"single species: {values[0] * values[1]}")
-    #  print(f)
 
     return f
 
@@ -115,23 +98,10 @@ def init_population(L: int, N: int) -> Dict[str, List[float]]:
 
     for seq in sequences:
         population[seq] = [0.0, generate_fitness(seq)]
-    # population[seq] = [1/len(sequences), generate_fitness(seq)]
-    # founder_seq = random.choice(sequences)
-    # population[founder_seq][0] = 1.0 # assign the entire population to be a single random sequence out of the possibilities.
 
-    # raw_fitness = {seq: generate_fitness(seq) for seq in sequences}
-    # total_fitness = sum(raw_fitness.values())
-
-    # # Normalize fitness
-    # population = {
-    #     seq: [0, raw_fitness[seq] / total_fitness]
-    #     for seq in sequences
-    # }
     founder_seq = random.choice(sequences)
-    # founder_seq = '0'*L
-    population[founder_seq][0] = 1.0  # assign the entire population to be a single random sequence out of the possibilities.
 
-    print(population)
+    population[founder_seq][0] = 1.0  # assign the entire population to be a single random sequence out of the possibilities.
 
     return population
 
@@ -140,26 +110,9 @@ def generate_fitness(sequence: str) -> float:
     """
     Assigns fitness to a sequence, based on sequence properties but with some redomness.
     """
-    # num_ones = sequence.count('1')
-    # sequence_length = len(sequence)
-    # base_fitness = num_ones / sequence_length  # Calculate proportion of '1's
-    # # base_fitness = np.log(num_ones*100)
-    # noise = random.uniform(-0.1, 0.1)  # Add a small amount of random noise
-    # # noise = num_ones%2
-    # fitness = (base_fitness + noise) # Scale to range between 0 and 2
-    
-    # # Ensure fitness stays within the bounds [0, 2]
-    # fitness = max(0, fitness)
-    # fitness = 1/2**len(sequence)
-
     fitness = random.uniform(0, 2)
-
     return fitness
 
-
-###########
-### Run ###
-###########
 
 def main():
     # create initial population
@@ -174,9 +127,6 @@ def main():
         population_history.loc[generation] = pop_fraction_dist / sum(pop_fraction_dist)
         population = change_quasispecies(population, args.mutation_rate)
 
-        # print(sum(pop_fraction_dist))
-        # print(f)
-    # print(args.generations)
     # plot the average fitness of the quasispecies over time
     plt.plot(range(args.generations + 1), avg_fitness)
     plt.xlabel("Generation")
@@ -198,6 +148,7 @@ def main():
 
     fitnesses = [population[key][1] for key in population.keys()]
     print(f"max fitness possible: {max(fitnesses)}")
+
 
 def main_until_convergence(q, seq_length, max_generations=10000, threshold=1e-4):
     # Initialize population
@@ -234,13 +185,13 @@ def convergence_figure():
     mutation_rates = np.linspace(0.001, 0.5, 100)
     for l in lengths:
         l_time_to_converge = []
-        for mutation_rate in mutation_rates:
-            counter_until_convergence = main_until_convergence(mutation_rate, seq_length=l)
-            l_time_to_converge.append(counter_until_convergence)
-        counter_history.append(l_time_to_converge)
+    for mutation_rate in mutation_rates:
+        counter_until_convergence = main_until_convergence(mutation_rate, seq_length=5)
+        l_time_to_converge.append(counter_until_convergence)
+    counter_history.append(l_time_to_converge)
     plt.figure(figsize=(8, 5))
     for i, l_time_to_converge in enumerate(counter_history):
-        plt.plot(mutation_rates, l_time_to_converge, label=f"Length {lengths[i]}")
+        plt.plot(mutation_rates, l_time_to_converge, label=f"legths: {i}")
     plt.title("Effect of Mutation Rate on Time to Equilibrium")
     plt.xlabel("Mutation Rate")
     plt.ylabel("Generations Until Convergence")
@@ -250,15 +201,21 @@ def convergence_figure():
     plt.show()
 
 
+###########
+### Run ###
+###########
+
+
+
 if __name__ == "__main__":
 
     # get arguments from command line
     parser = argparse.ArgumentParser(description="Run a simple population genetics simulation.")
     parser.add_argument("-N", "--population_size", type=int, required=False, default=100,
                         help="Population size (positive integer)")
-    parser.add_argument("-L", "--sequence_length", type=int, required=False, default=5,
+    parser.add_argument("-L", "--sequence_length", type=int, required=False, default=3,
                         help="Length of the sequence (positive integer)")
-    parser.add_argument("-q", "--mutation_rate", type=float, required=False, default=0.05,
+    parser.add_argument("-q", "--mutation_rate", type=float, required=False, default=0,
                         help="Mutation rate (float between 0 and 1)")
     parser.add_argument("-t", "--generations", type=int, required=False, default=1000,
                         help="Number of generatons i(positive integer)")
