@@ -188,12 +188,13 @@ def main():
     # plot the frequency of the different populations
     for species in population_history:
         plt.plot(population_history[species],
-                 label=f"{str(species)} (fitness: {round(population.get(species)[1], 2)}")  # Add label for legend
+                 label=f"{str(species)} (fitness: {round(population.get(species)[1], 2)})")  # Add label for legend
     plt.xlabel("Generation")
     plt.ylabel("Frequency")
     plt.title("Frequency of Different Populations Over Time")
-    plt.legend(title="Population")
-    plt.show()  # Show the second plot
+    plt.legend(title="Population", bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()  # Adjust layout so labels/legend don't get cut off
+    plt.show()
 
     fitnesses = [population[key][1] for key in population.keys()]
     print(f"max fitness possible: {max(fitnesses)}")
@@ -226,6 +227,29 @@ def main_until_convergence(q, seq_length, max_generations=10000, threshold=1e-4)
         counter += 1
     return counter
 
+
+def convergence_figure():
+    lengths = [1, 2, 3, 4, 5]
+    counter_history = []
+    mutation_rates = np.linspace(0.001, 0.5, 100)
+    for l in lengths:
+        l_time_to_converge = []
+        for mutation_rate in mutation_rates:
+            counter_until_convergence = main_until_convergence(mutation_rate, seq_length=l)
+            l_time_to_converge.append(counter_until_convergence)
+        counter_history.append(l_time_to_converge)
+    plt.figure(figsize=(8, 5))
+    for i, l_time_to_converge in enumerate(counter_history):
+        plt.plot(mutation_rates, l_time_to_converge, label=f"Length {lengths[i]}")
+    plt.title("Effect of Mutation Rate on Time to Equilibrium")
+    plt.xlabel("Mutation Rate")
+    plt.ylabel("Generations Until Convergence")
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+
 if __name__ == "__main__":
 
     # get arguments from command line
@@ -243,18 +267,4 @@ if __name__ == "__main__":
 
     main()
 
-
-    # counter_history = []
-    # mutation_rates = np.linspace(0.001, 0.5, 100)
-    # for mutation_rate in mutation_rates:
-    #     counter_until_convergence = main_until_convergence(mutation_rate, seq_length= 5)
-    #     counter_history.append(counter_until_convergence)
-    # lengths = [1,2,3,4,5,6,7,8,9,10,11,12]
-    # plt.figure(figsize=(8, 5))
-    # plt.plot(mutation_rates, counter_history)
-    # plt.title("Effect of Mutation Rate on Time to Equilibrium")
-    # plt.xlabel("Mutation Rate")
-    # plt.ylabel("Generations Until Convergence")
-    # plt.grid(True)
-    # plt.tight_layout()
-    # plt.show()
+    # convergence_figure()
