@@ -113,24 +113,26 @@ def init_population(L: int, N: int) -> Dict[str, List[float]]:
         binary_string = bin(i)[2:].zfill(L)  # Convert to binary, remove "0b", pad with zeros
         sequences.append(binary_string)
 
-    # for seq in sequences:
-    # population[seq] = [0.0, generate_fitness(seq)]
+    for seq in sequences:
+        population[seq] = [0.0, generate_fitness(seq)]
     # population[seq] = [1/len(sequences), generate_fitness(seq)]
     # founder_seq = random.choice(sequences)
     # population[founder_seq][0] = 1.0 # assign the entire population to be a single random sequence out of the possibilities.
 
-    raw_fitness = {seq: generate_fitness(seq) for seq in sequences}
-    total_fitness = sum(raw_fitness.values())
+    # raw_fitness = {seq: generate_fitness(seq) for seq in sequences}
+    # total_fitness = sum(raw_fitness.values())
 
-    # Normalize fitness
-    population = {
-        seq: [0, raw_fitness[seq] / total_fitness]
-        for seq in sequences
-    }
-    # founder_seq = random.choice(sequences)
-    founder_seq = '0'*L
-    population[founder_seq][
-        0] = 1.0  # assign the entire population to be a single random sequence out of the possibilities.
+    # # Normalize fitness
+    # population = {
+    #     seq: [0, raw_fitness[seq] / total_fitness]
+    #     for seq in sequences
+    # }
+    founder_seq = random.choice(sequences)
+    # founder_seq = '0'*L
+    population[founder_seq][0] = 1.0  # assign the entire population to be a single random sequence out of the possibilities.
+
+    print(population)
+
     return population
 
 
@@ -138,17 +140,20 @@ def generate_fitness(sequence: str) -> float:
     """
     Assigns fitness to a sequence, based on sequence properties but with some redomness.
     """
-    num_ones = sequence.count('1')
-    # # sequence_length = len(sequence)
+    # num_ones = sequence.count('1')
+    # sequence_length = len(sequence)
     # base_fitness = num_ones / sequence_length  # Calculate proportion of '1's
-    # base_fitness = np.log(num_ones*100)
+    # # base_fitness = np.log(num_ones*100)
     # noise = random.uniform(-0.1, 0.1)  # Add a small amount of random noise
     # # noise = num_ones%2
     # fitness = (base_fitness + noise) # Scale to range between 0 and 2
-    #
+    
     # # Ensure fitness stays within the bounds [0, 2]
     # fitness = max(0, fitness)
-    fitness = 1/2**len(sequence)
+    # fitness = 1/2**len(sequence)
+
+    fitness = random.uniform(0, 2)
+
     return fitness
 
 
@@ -190,6 +195,9 @@ def main():
     plt.legend(title="Population")
     plt.show()  # Show the second plot
 
+    fitnesses = [population[key][1] for key in population.keys()]
+    print(f"max fitness possible: {max(fitnesses)}")
+
 def main_until_convergence(q, seq_length, max_generations=10000, threshold=1e-4):
     # Initialize population
     population = init_population(seq_length, args.population_size)
@@ -224,29 +232,29 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run a simple population genetics simulation.")
     parser.add_argument("-N", "--population_size", type=int, required=False, default=100,
                         help="Population size (positive integer)")
-    parser.add_argument("-L", "--sequence_length", type=int, required=False, default=3,
+    parser.add_argument("-L", "--sequence_length", type=int, required=False, default=5,
                         help="Length of the sequence (positive integer)")
-    parser.add_argument("-q", "--mutation_rate", type=float, required=False, default=0.001,
+    parser.add_argument("-q", "--mutation_rate", type=float, required=False, default=0.05,
                         help="Mutation rate (float between 0 and 1)")
-    parser.add_argument("-t", "--generations", type=int, required=False, default=100000,
+    parser.add_argument("-t", "--generations", type=int, required=False, default=1000,
                         help="Number of generatons i(positive integer)")
     args = parser.parse_args()
 
 
-    # main()
+    main()
 
 
-    counter_history = []
-    mutation_rates = np.linspace(0.001, 0.5, 100)
-    for mutation_rate in mutation_rates:
-        counter_until_convergence = main_until_convergence(mutation_rate, seq_length= 5)
-        counter_history.append(counter_until_convergence)
-    lengths = [1,2,3,4,5,6,7,8,9,10,11,12]
-    plt.figure(figsize=(8, 5))
-    plt.plot(mutation_rates, counter_history)
-    plt.title("Effect of Mutation Rate on Time to Equilibrium")
-    plt.xlabel("Mutation Rate")
-    plt.ylabel("Generations Until Convergence")
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
+    # counter_history = []
+    # mutation_rates = np.linspace(0.001, 0.5, 100)
+    # for mutation_rate in mutation_rates:
+    #     counter_until_convergence = main_until_convergence(mutation_rate, seq_length= 5)
+    #     counter_history.append(counter_until_convergence)
+    # lengths = [1,2,3,4,5,6,7,8,9,10,11,12]
+    # plt.figure(figsize=(8, 5))
+    # plt.plot(mutation_rates, counter_history)
+    # plt.title("Effect of Mutation Rate on Time to Equilibrium")
+    # plt.xlabel("Mutation Rate")
+    # plt.ylabel("Generations Until Convergence")
+    # plt.grid(True)
+    # plt.tight_layout()
+    # plt.show()
