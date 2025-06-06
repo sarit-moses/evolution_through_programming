@@ -103,6 +103,8 @@ def init_population(L: int, N: int) -> Dict[str, List[float]]:
 
     population[founder_seq][0] = 1.0  # assign the entire population to be a single random sequence out of the possibilities.
 
+    print(population)
+
     return population
 
 
@@ -149,7 +151,6 @@ def main():
     fitnesses = [population[key][1] for key in population.keys()]
     print(f"max fitness possible: {max(fitnesses)}")
 
-
 def main_until_convergence(q, seq_length, max_generations=10000, threshold=1e-4):
     # Initialize population
     population = init_population(seq_length, args.population_size)
@@ -185,13 +186,13 @@ def convergence_figure():
     mutation_rates = np.linspace(0.001, 0.5, 100)
     for l in lengths:
         l_time_to_converge = []
-    for mutation_rate in mutation_rates:
-        counter_until_convergence = main_until_convergence(mutation_rate, seq_length=5)
-        l_time_to_converge.append(counter_until_convergence)
-    counter_history.append(l_time_to_converge)
+        for mutation_rate in mutation_rates:
+            counter_until_convergence = main_until_convergence(mutation_rate, seq_length=l)
+            l_time_to_converge.append(counter_until_convergence)
+        counter_history.append(l_time_to_converge)
     plt.figure(figsize=(8, 5))
     for i, l_time_to_converge in enumerate(counter_history):
-        plt.plot(mutation_rates, l_time_to_converge, label=f"legths: {i}")
+        plt.plot(mutation_rates, l_time_to_converge, label=f"Length {lengths[i]}")
     plt.title("Effect of Mutation Rate on Time to Equilibrium")
     plt.xlabel("Mutation Rate")
     plt.ylabel("Generations Until Convergence")
