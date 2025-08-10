@@ -29,7 +29,7 @@ class Dead(Enum):
 
 class Clade:
     def __init__(self, parent_fitness =1):
-        noise = np.random.normal(loc=0, scale=0.01)
+        noise = np.random.normal(loc=0, scale=0.1)
         self.fitness = parent_fitness + noise # this is where mutations are induced in the model
 
     def draw_clade(self):
@@ -167,8 +167,7 @@ class Predator(Organism):
             
             # Hunting success is a combined probability of meeting and winning
             # The chance to meet is scaled by the prey population
-            chance_to_meet = min(1.0, prey_population / 100.0)
-            chance_to_meet = min(1.0, prey_population / (predator_population * 20.0))
+            chance_to_meet = min(1.0, Prey.total_population / (Predator.total_population * 20.0))
             # The chance to win is based on the fitness difference
             chance_to_win = sigmoid(self.fitness - prey_to_eat.fitness)
             # The total hunting probability
