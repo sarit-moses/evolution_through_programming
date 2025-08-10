@@ -1,9 +1,8 @@
 """
-Predator-Prey Evolution Simulation with Seasonal Dynamics
+Predator-Prey Evolution Simulation
 Authors: Sarit Moses (211772900), Itamar Nini (207047150)
 
-A simulation of predator-prey dynamics with evolutionary fitness, mutation rates,
-and seasonal grass growth patterns.
+A simulation of predator-prey dynamics with evolutionary fitness and mutation rates.
 """
 
 ###############################################################################
@@ -19,7 +18,6 @@ from enum import Enum
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
 from scipy.stats import spearmanr
 
 
@@ -50,93 +48,6 @@ class LifeStatus(Enum):
     """Represents the life status of an organism."""
     DEAD = 0
     ALIVE = 1
-
-
-class Season(Enum):
-    """Represents the four seasons."""
-    SPRING = 0
-    SUMMER = 1
-    AUTUMN = 2
-    WINTER = 3
-
-
-###############################################################################
-# SEASONAL DYNAMICS
-###############################################################################
-
-class SeasonalEnvironment:
-    """
-    Manages seasonal changes in the environment.
-
-    Attributes:
-        days_per_season: Number of days in each season
-        current_day: Current day of the simulation
-        grass_growth_rates: Grass growth rate for each season
-    """
-
-    def __init__(self, days_per_season: int = 30):
-        """
-        Initialize seasonal environment.
-
-        Args:
-            days_per_season: Number of days per season
-        """
-        self.days_per_season = days_per_season
-        self.current_day = 0
-
-        # Define grass growth rates for each season
-        self.grass_growth_rates = {
-            Season.SPRING: 500,  # High growth in spring
-            Season.SUMMER: 350,  # Moderate growth in summer
-            Season.AUTUMN: 200,  # Declining growth in autumn
-            Season.WINTER: 50    # Minimal growth in winter
-        }
-
-        # Define grass decay rates (grass dies naturally)
-        self.grass_decay_rates = {
-            Season.SPRING: 50,
-            Season.SUMMER: 100,
-            Season.AUTUMN: 150,
-            Season.WINTER: 200
-        }
-
-    def get_current_season(self) -> Season:
-        """Get the current season based on the day."""
-        season_index = (self.current_day // self.days_per_season) % 4
-        return Season(season_index)
-
-    def get_daily_grass_growth(self) -> int:
-        """
-        Calculate daily grass growth based on current season.
-
-        Returns:
-            Net grass growth for the day
-        """
-        season = self.get_current_season()
-        growth = self.grass_growth_rates[season]
-        decay = self.grass_decay_rates[season]
-
-        # Add some daily variation
-        growth_variation = np.random.normal(1.0, 0.1)
-        actual_growth = int(growth * growth_variation)
-
-        # Net growth can be negative in harsh conditions
-        net_growth = actual_growth - decay
-
-        return net_growth
-
-    def advance_day(self):
-        """Advance to the next day."""
-        self.current_day += 1
-
-    def get_season_name(self) -> str:
-        """Get the name of the current season."""
-        return self.get_current_season().name.capitalize()
-
-    def get_year_progress(self) -> float:
-        """Get progress through the current year (0-1)."""
-        days_per_year = self.days_per_season * 4
-        return (self.current_day % days_per_year) / days_per_year
 
 
 ###############################################################################
@@ -227,15 +138,7 @@ class Organism:
         Returns:
             Tuple of (life status, potential offspring)
         """
-        # Seasonal effects on energy consumption
-        season = self.world.environment.get_current_season()
-        seasonal_multiplier = 1.0
-        if season == Season.WINTER:
-            seasonal_multiplier = 1.5  # Higher energy cost in winter
-        elif season == Season.SUMMER:
-            seasonal_multiplier = 1.2  # Slightly higher in summer (heat)
-
-        self.energy -= self.energy_consumption * seasonal_multiplier
+        self.energy -= self.energy_consumption
         offspring = None
 
         # Check death condition
@@ -243,15 +146,9 @@ class Organism:
             self.die()
             return LifeStatus.DEAD.value, offspring
 
-        # Check reproduction (more likely in spring)
-        reproduction_modifier = 1.0
-        if season == Season.SPRING:
-            reproduction_modifier = 0.7  # Lower threshold = more reproduction
-        elif season == Season.WINTER:
-            reproduction_modifier = 1.3  # Higher threshold = less reproduction
-
+        # Check reproduction
         x = np.random.rand()
-        if x > 2 * (type(self).reproduction_constant / (self.eaten + 1)) * reproduction_modifier:
+        if x > 2 * (type(self).reproduction_constant / (self.eaten + 1)):
             offspring = self.reproduce()
 
         self.eaten = False
@@ -359,7 +256,6 @@ class World:
             grass_amount: Initial amount of grass
         """
         self.grass = grass_amount
-        self.environment = SeasonalEnvironment()
 
         # Initialize prey population
         prey_clade = Clade(mutation_rate=0.1, initial=True)
@@ -380,7 +276,6 @@ class World:
 
     def simulate_predator_hunt(self):
         """Simulate all predators hunting prey."""
-        # Seasonal effects on hunting success
         for predator in random.sample(self.predator_list,
                                       len(self.predator_list)):
             for prey in self.prey_list:
@@ -393,9 +288,9 @@ class World:
                     shift=1
                 )
                 chance_to_win = sigmoid(
-                    predator.fitness - prey.fitness,
+                    (predator.fitness - prey.fitness)*100,
                     con=5
-                ) / 50
+                ) / 20
 
                 if win < chance_to_meet * chance_to_win:
                     predator.eat(prey)
@@ -405,9 +300,8 @@ class World:
         # Morning: prey graze
         self.simulate_prey_grazing()
 
-        # Seasonal grass regrowth
-        grass_growth = self.environment.get_daily_grass_growth()
-        self.grass = max(0, self.grass + grass_growth)  # Grass can't go negative
+        # Grass regrowth
+        self.grass += 300
 
         # Afternoon: predators hunt
         self.simulate_predator_hunt()
@@ -425,78 +319,23 @@ class World:
             if predator_day[1]:  # If offspring was produced
                 self.predator_list.append(predator_day[1])
 
-        # Advance to next day
-        self.environment.advance_day()
-
 
 ###############################################################################
 # VISUALIZATION FUNCTIONS
 ###############################################################################
 
 def population_size_figure(days_list: List[int], pred_pop_list: List[int],
-                           prey_pop_list: List[int], days_per_season: int = 90):
-    """Create population size plot with seasonal indicators."""
-    fig, ax = plt.subplots(figsize=(14, 8))
-
-    # Plot population lines
-    ax.plot(days_list, prey_pop_list, label="Prey Population", color="green", linewidth=2)
-    ax.plot(days_list, pred_pop_list, label="Predator Population", color="red", linewidth=2)
-
-    # Add seasonal background colors
-    season_colors = {
-        0: ('#90EE90', 'Spring'),  # Light green
-        1: ('#FFD700', 'Summer'),  # Gold
-        2: ('#FF8C00', 'Autumn'),  # Dark orange
-        3: ('#87CEEB', 'Winter')   # Sky blue
-    }
-
-    max_pop = max(max(prey_pop_list), max(pred_pop_list))
-
-    # Draw seasonal backgrounds
-    for day in range(0, max(days_list) + 1, days_per_season):
-        season_idx = (day // days_per_season) % 4
-        color, name = season_colors[season_idx]
-
-        if day + days_per_season <= max(days_list):
-            rect = Rectangle((day, 0), days_per_season, max_pop * 1.1,
-                           facecolor=color, alpha=0.2, edgecolor='none')
-            ax.add_patch(rect)
-
-    # Add season labels at the bottom
-    ax2 = ax.twiny()
-    ax2.set_xlim(ax.get_xlim())
-
-    season_positions = []
-    season_labels = []
-    for i in range(0, max(days_list), days_per_season):
-        season_positions.append(i + days_per_season/2)
-        season_idx = (i // days_per_season) % 4
-        season_labels.append(season_colors[season_idx][1])
-
-    ax2.set_xticks(season_positions)
-    ax2.set_xticklabels(season_labels)
-    ax2.xaxis.set_ticks_position('bottom')
-    ax2.xaxis.set_label_position('bottom')
-    ax2.spines['bottom'].set_position(('outward', 40))
-
-    # Format main plot
-    ax.set_xlabel("Day", fontsize=12)
-    ax.set_ylabel("Population Size", fontsize=12)
-    ax.set_title("Prey vs Predator Population Over Time with Seasonal Dynamics", fontsize=14, fontweight='bold')
-    ax.legend(loc='upper right', fontsize=11)
-    ax.grid(True, alpha=0.3)
-    ax.set_ylim(0, max_pop * 1.1)
-
-    # Add year markers
-    years = max(days_list) // (days_per_season * 4)
-    for year in range(1, years + 1):
-        year_day = year * days_per_season * 4
-        if year_day <= max(days_list):
-            ax.axvline(x=year_day, color='black', linestyle='--', alpha=0.3, linewidth=1)
-            ax.text(year_day, max_pop * 1.05, f'Year {year}', rotation=90,
-                   verticalalignment='bottom', fontsize=9)
-
-    plt.tight_layout()
+                           prey_pop_list: List[int]):
+    """Create population size plot."""
+    plt.figure(figsize=(10, 6))
+    plt.plot(days_list, prey_pop_list, label="Prey Population", color="green")
+    plt.plot(days_list, pred_pop_list, label="Predator Population", color="red")
+    plt.xlabel("Day")
+    plt.ylabel("Population Size")
+    plt.title("Prey vs Predator Population Over Time")
+    plt.legend()
+    plt.xticks(range(0, 1001, 50))
+    plt.grid(True)
     plt.show()
 
 
@@ -513,7 +352,7 @@ def prey_fitness_figure(avg_prey_fitness_list: List[float],
     plt.ylabel("Average Prey Fitness")
     plt.title("Average Prey Fitness Over Time")
     plt.legend()
-    plt.xticks(range(0, max(days_list) + 1, 50))
+    plt.xticks(range(0, 1001, 50))
     plt.grid(True)
     plt.show()
 
@@ -527,7 +366,7 @@ def predator_fitness_figure(avg_pred_fitness_list: List[float],
     plt.ylabel("Average Predator Fitness")
     plt.title("Average Predator Fitness Over Time")
     plt.legend()
-    plt.xticks(range(0, max(days_list) + 1, 50))
+    plt.xticks(range(0, 1001, 50))
     plt.grid(True)
     plt.show()
 
@@ -544,47 +383,8 @@ def mutation_rate_figure(avg_pred_mutrate_list: List[float],
     plt.ylabel("Average Mutation Rate (std of fitness noise)")
     plt.title("Average Mutation Rate Over Time")
     plt.legend()
-    plt.xticks(range(0, max(days_list) + 1, 50))
+    plt.xticks(range(0, 1001, 50))
     plt.grid(True)
-    plt.show()
-
-
-def grass_availability_figure(grass_list: List[int], days_list: List[int],
-                              days_per_season: int = 90):
-    """Create grass availability plot with seasonal indicators."""
-    fig, ax = plt.subplots(figsize=(12, 6))
-
-    # Plot grass availability
-    ax.plot(days_list, grass_list, label="Grass Available", color="darkgreen", linewidth=2)
-
-    # Add seasonal background colors
-    season_colors = {
-        0: ('#90EE90', 'Spring'),
-        1: ('#FFD700', 'Summer'),
-        2: ('#FF8C00', 'Autumn'),
-        3: ('#87CEEB', 'Winter')
-    }
-
-    max_grass = max(grass_list) if grass_list else 1000
-
-    # Draw seasonal backgrounds
-    for day in range(0, max(days_list) + 1, days_per_season):
-        season_idx = (day // days_per_season) % 4
-        color, name = season_colors[season_idx]
-
-        if day + days_per_season <= max(days_list):
-            rect = Rectangle((day, 0), days_per_season, max_grass * 1.1,
-                           facecolor=color, alpha=0.2, edgecolor='none')
-            ax.add_patch(rect)
-
-    ax.set_xlabel("Day", fontsize=12)
-    ax.set_ylabel("Grass Availability", fontsize=12)
-    ax.set_title("Grass Availability Over Time with Seasonal Growth", fontsize=14, fontweight='bold')
-    ax.legend(loc='upper right', fontsize=11)
-    ax.grid(True, alpha=0.3)
-    ax.set_ylim(0, max_grass * 1.1)
-
-    plt.tight_layout()
     plt.show()
 
 
@@ -614,8 +414,6 @@ class SimulationRunner:
         self.avg_pred_fitness_list = []
         self.avg_prey_mutrate_list = []
         self.avg_pred_mutrate_list = []
-        self.grass_list = []
-        self.season_list = []
 
     def track_day(self, day: int, world: World):
         """
@@ -628,8 +426,6 @@ class SimulationRunner:
         self.days_list.append(day)
         self.prey_pop_list.append(len(world.prey_list))
         self.pred_pop_list.append(len(world.predator_list))
-        self.grass_list.append(world.grass)
-        self.season_list.append(world.environment.get_current_season().value)
 
         # Track prey statistics
         if len(world.prey_list) > 0:
@@ -666,12 +462,6 @@ class SimulationRunner:
             self.track_day(day, world)
             world.simulate_day()
 
-            # Print progress every 100 days
-            if day % 100 == 0:
-                season = world.environment.get_season_name()
-                print(f"Day {day} ({season}): Prey={len(world.prey_list)}, "
-                      f"Predators={len(world.predator_list)}, Grass={world.grass}")
-
     def run_control_simulation(self, prey_number: int = 300,
                                grass_amount: int = 300) -> List[float]:
         """
@@ -704,26 +494,9 @@ class SimulationRunner:
 
     def analyze_results(self):
         """Analyze and print correlation statistics."""
-        # Remove NaN values for correlation
-        valid_indices = ~np.isnan(self.avg_prey_fitness_list)
-        if np.sum(valid_indices) > 1:
-            valid_fitness = np.array(self.avg_prey_fitness_list)[valid_indices]
-            valid_population = np.array(self.prey_pop_list)[valid_indices]
-
-            rho, pval = spearmanr(valid_fitness, valid_population)
-            print(f"\nSpearman correlation (avg prey fitness vs prey population): "
-                  f"rho={rho:.3f}, p={pval:.3g}")
-
-        # Analyze seasonal effects
-        print("\nSeasonal Population Statistics:")
-        for season in Season:
-            season_days = [i for i, s in enumerate(self.season_list) if s == season.value]
-            if season_days:
-                avg_prey = np.mean([self.prey_pop_list[i] for i in season_days])
-                avg_pred = np.mean([self.pred_pop_list[i] for i in season_days])
-                avg_grass = np.mean([self.grass_list[i] for i in season_days])
-                print(f"{season.name}: Avg Prey={avg_prey:.1f}, "
-                      f"Avg Predators={avg_pred:.1f}, Avg Grass={avg_grass:.1f}")
+        rho, pval = spearmanr(self.avg_prey_fitness_list, self.prey_pop_list)
+        print(f"Spearman correlation (avg prey fitness vs prey population): "
+              f"rho={rho:.3f}, p={pval:.3g}")
 
     def plot_all_figures(self, avg_prey_fitness_no_pred_list: List[float]):
         """
@@ -734,7 +507,6 @@ class SimulationRunner:
         """
         population_size_figure(self.days_list, self.pred_pop_list,
                                self.prey_pop_list)
-        grass_availability_figure(self.grass_list, self.days_list)
         prey_fitness_figure(self.avg_prey_fitness_list,
                             avg_prey_fitness_no_pred_list, self.days_list)
         predator_fitness_figure(self.avg_pred_fitness_list, self.days_list)
@@ -748,46 +520,28 @@ class SimulationRunner:
 
 def main():
     """Main entry point for the simulation."""
-    # Parse command line arguments
-    parser = argparse.ArgumentParser(description='Run predator-prey evolution simulation')
-    parser.add_argument('--days', type=int, default=720,
-                       help='Number of days to simulate (default: 720, ~2 years)')
-    parser.add_argument('--prey', type=int, default=300,
-                       help='Initial prey population (default: 300)')
-    parser.add_argument('--predators', type=int, default=10,
-                       help='Initial predator population (default: 10)')
-    parser.add_argument('--grass', type=int, default=1000,
-                       help='Initial grass amount (default: 1000)')
-    args = parser.parse_args()
-
     # Initialize simulation runner
-    runner = SimulationRunner(days=args.days)
+    runner = SimulationRunner(days=1000)
 
     # Create world with initial populations
-    world = World(prey_number=args.prey, predator_number=args.predators,
-                  grass_amount=args.grass)
+    world = World(prey_number=300, predator_number=10, grass_amount=300)
 
     # Run main simulation
-    print(f"Running main simulation with predators for {args.days} days...")
-    print(f"Initial conditions: {args.prey} prey, {args.predators} predators, {args.grass} grass")
-    print("-" * 60)
+    print("Running main simulation with predators...")
     runner.run_simulation(world)
 
     # Run control simulation without predators
-    print("\n" + "-" * 60)
     print("Running control simulation without predators...")
-    avg_prey_fitness_no_pred = runner.run_control_simulation(
-        prey_number=args.prey, grass_amount=args.grass
-    )
+    avg_prey_fitness_no_pred = runner.run_control_simulation()
 
     # Analyze results
     runner.analyze_results()
 
     # Create visualizations
-    print("\nGenerating plots...")
+    print("Generating plots...")
     runner.plot_all_figures(avg_prey_fitness_no_pred)
 
-    print("\nSimulation complete!")
+    print("Simulation complete!")
 
 
 if __name__ == '__main__':
