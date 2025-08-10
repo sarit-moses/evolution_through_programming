@@ -245,7 +245,7 @@ def sigmoid(x):
 if __name__ == "__main__":
     world = World(prey_number=500, predator_number=50, grass_amount=10000)
     days_to_simulate = 100
-    n_hunt_attempts_per_preditor = 22
+    n_hunt_attempts_per_preditor = 24
     world.simulate_days(days=days_to_simulate)
 
     # Plotting the results
