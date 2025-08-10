@@ -283,14 +283,13 @@ class World:
 
                 # Calculate encounter and success probabilities
                 chance_to_meet = sigmoid(
-                    Prey.total_population * predator.fitness / World.area *
+                    Prey.total_population * predator.fitness /World.area *
                     predator.eaten,
                     shift=1
                 )
                 chance_to_win = sigmoid(
-                    (predator.fitness - prey.fitness)*100,
-                    con=5
-                ) / 20
+                    (predator.fitness - prey.fitness),
+                ) / 50
 
                 if win < chance_to_meet * chance_to_win:
                     predator.eat(prey)
