@@ -19,11 +19,7 @@ from enum import Enum
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import spearmanr
-<<<<<<< HEAD
-
-=======
 import matplotlib.patches as mpatches
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
 
 ###############################################################################
 # UTILITY FUNCTIONS
@@ -41,11 +37,7 @@ def sigmoid(x: float, shift: float = 0, con: float = 1) -> float:
     Returns:
         Sigmoid transformed value between 0 and 1
     """
-<<<<<<< HEAD
-    return 1 / (1 + np.exp(-x + shift))
-=======
     return 1 / (1 + np.exp((-x + shift)* con))
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
 
 
 ###############################################################################
@@ -57,8 +49,6 @@ class LifeStatus(Enum):
     DEAD = 0
     ALIVE = 1
 
-<<<<<<< HEAD
-=======
 class Season(Enum):
     WINTER = 0
     SPRING = 1
@@ -80,46 +70,11 @@ SEASON_NAMES = {
     Season.AUTUMN: 'Autumn'
 }
 
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
 
 ###############################################################################
 # EVOLUTIONARY CLASSES
 ###############################################################################
 
-<<<<<<< HEAD
-class Clade:
-    """
-    Represents a genetic lineage with fitness and mutation rate.
-
-    Attributes:
-        mutation_rate: Rate at which mutations occur
-        fitness: Current fitness level of this clade
-    """
-
-    def __init__(self, mutation_rate: float, parent_fitness: float = 1,
-                 initial: bool = False):
-        """
-        Initialize a new clade.
-
-        Args:
-            mutation_rate: Base mutation rate
-            parent_fitness: Fitness of the parent clade
-            initial: Whether this is an initial clade (no mutations)
-        """
-        # Add noise to mutation rate
-        mutation_rate_noise = np.random.normal(loc=0, scale=0.05)
-        self.mutation_rate = max(0, mutation_rate + mutation_rate_noise)
-
-        # Add fitness mutation if not initial
-        fitness_noise = 0
-        if not initial:
-            fitness_noise = np.random.normal(loc=0, scale=self.mutation_rate)
-        self.fitness = parent_fitness + fitness_noise
-
-    def draw_clade(self) -> 'Clade':
-        """Create a new clade descended from this one."""
-        return Clade(self.mutation_rate, self.fitness)
-=======
 # class Clade:
 #     """
 #     Represents a genetic lineage with fitness and mutation rate.
@@ -152,7 +107,6 @@ class Clade:
 #     def draw_clade(self) -> 'Clade':
 #         """Create a new clade descended from this one."""
 #         return Clade(self.mutation_rate, self.fitness)
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
 
 
 ###############################################################################
@@ -171,11 +125,7 @@ class Organism:
     total_population = 1
     reproduction_constant = 1
 
-<<<<<<< HEAD
-    def __init__(self, fitness: float, world: 'World'):
-=======
     def __init__(self, fitness: float, mutation_rate: float, world: 'World'):
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
         """
         Initialize an organism.
 
@@ -183,16 +133,10 @@ class Organism:
             fitness: Initial fitness value
             world: Reference to the world this organism lives in
         """
-<<<<<<< HEAD
-        self.clade = Clade(mutation_rate=0, parent_fitness=1)
-        self.energy = 5
-        self.fitness = fitness
-=======
         self.age = 1
         self.energy = 5
         self.fitness = max(0.0 , fitness)
         self.mutation_rate = mutation_rate
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
         self.world = world
         self.eaten = 0
         self.energy_consumption = 1
@@ -205,11 +149,7 @@ class Organism:
     def reproduce(self) -> 'Organism':
         """Create offspring from this organism."""
         return type(self)(
-<<<<<<< HEAD
-            Clade(self.clade.mutation_rate, self.clade.fitness),
-=======
             self.fitness + np.random.normal(loc=0, scale=0.1), max(0, self.mutation_rate + np.random.normal(0, 0.01)),
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
             world=self.world
         )
 
@@ -220,29 +160,18 @@ class Organism:
         Returns:
             Tuple of (life status, potential offspring)
         """
-<<<<<<< HEAD
-=======
         self.age +=1
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
         self.energy -= self.energy_consumption
         offspring = None
 
         # Check death condition
-<<<<<<< HEAD
-        if self.energy <= 0 and type(self).total_population > 10:
-=======
         if self.energy <= 0:
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
             self.die()
             return LifeStatus.DEAD.value, offspring
 
         # Check reproduction
         x = np.random.rand()
-<<<<<<< HEAD
-        if x > 2 * (type(self).reproduction_constant / (self.eaten + 1)):
-=======
         if self.age > 3 and x > type(self).reproduction_constant:
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
             offspring = self.reproduce()
 
         self.eaten = False
@@ -265,18 +194,10 @@ class Predator(Organism):
     reproduction_constant = 0.8
     total_population = 0
 
-<<<<<<< HEAD
-    def __init__(self, clade: Clade, world: 'World'):
-        """Initialize a predator with given clade and world."""
-        self.clade = clade
-        fitness = self.clade.fitness
-        super().__init__(fitness=fitness, world=world)
-=======
     def __init__(self, fitness, mutation_rate, world: 'World'):
         """Initialize a predator with given clade and world."""
         # self.clade = clade
         super().__init__(fitness=fitness, mutation_rate= mutation_rate, world=world)
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
         self.energy_consumption = 3
 
     def eat(self, prey_subject: 'Prey'):
@@ -292,15 +213,9 @@ class Predator(Organism):
 
     def die(self):
         """Remove predator from world if population is sufficient."""
-<<<<<<< HEAD
-        if Predator.total_population > 10:
-            type(self).total_population -= 1
-            self.world.predator_list.remove(self)
-=======
         # if Predator.total_population > 10:
         type(self).total_population -= 1
         self.world.predator_list.remove(self)
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
 
 
 class Prey(Organism):
@@ -313,18 +228,10 @@ class Prey(Organism):
 
     reproduction_constant = 0.8
 
-<<<<<<< HEAD
-    def __init__(self, clade: Clade, world: 'World'):
-        """Initialize a prey with given clade and world."""
-        self.clade = clade
-        fitness = self.clade.fitness
-        super().__init__(fitness=fitness, world=world)
-=======
     def __init__(self, fitness, mutation_rate, world: 'World'):
         """Initialize a prey with given clade and world."""
 
         super().__init__(fitness=fitness, mutation_rate= mutation_rate, world=world)
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
         self.eaten = 0
 
     def eat(self, world: 'World'):
@@ -340,15 +247,9 @@ class Prey(Organism):
 
     def die(self):
         """Remove prey from world if population is sufficient."""
-<<<<<<< HEAD
-        if Prey.total_population > 10:
-            type(self).total_population -= 1
-            self.world.prey_list.remove(self)
-=======
         # if Prey.total_population > 10:
         type(self).total_population -= 1
         self.world.prey_list.remove(self)
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
 
 
 ###############################################################################
@@ -364,17 +265,11 @@ class World:
     """
 
     area = 100 ** 2
-<<<<<<< HEAD
-
-    def __init__(self, prey_number: int, predator_number: int,
-                 grass_amount: int):
-=======
     season_length = 125
     GRASS_PER_SEASON = {Season.WINTER: 150, Season.SPRING: 300, Season.SUMMER: 250, Season.AUTUMN: 200}
 
     def __init__(self, prey_number: int, predator_number: int,
                  grass_amount: int, seasonal=False):
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
         """
         Initialize the world with organisms and resources.
 
@@ -382,20 +277,6 @@ class World:
             prey_number: Initial number of prey
             predator_number: Initial number of predators
             grass_amount: Initial amount of grass
-<<<<<<< HEAD
-        """
-        self.grass = grass_amount
-
-        # Initialize prey population
-        prey_clade = Clade(mutation_rate=0.1, initial=True)
-        prey_list = [Prey(prey_clade, self) for _ in range(prey_number)]
-        self.prey_list = sorted(prey_list, key=lambda prey: prey.fitness)
-
-        # Initialize predator population
-        predator_clade = Clade(mutation_rate=0.1, initial=True)
-        self.predator_list = [
-            Predator(predator_clade, self) for _ in range(predator_number)
-=======
             seasonal: Whether to enable seasonal effects
         """
         if seasonal == True:
@@ -418,7 +299,6 @@ class World:
         # predator_clade = Clade(mutation_rate=0.1, initial=True)
         self.predator_list = [
             Predator(1, 0.1, self) for _ in range(predator_number)
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
         ]
 
     def simulate_prey_grazing(self):
@@ -453,9 +333,6 @@ class World:
         self.simulate_prey_grazing()
 
         # Grass regrowth
-<<<<<<< HEAD
-        self.grass += 300
-=======
         if self.seasonal:
             self.season_counter = ((self.season_counter + 1) % World.season_length)
             if self.season_counter == 0:
@@ -463,7 +340,6 @@ class World:
             self.grass += World.GRASS_PER_SEASON[self.season]
         else:
             self.grass += 300
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
 
         # Afternoon: predators hunt
         self.simulate_predator_hunt()
@@ -486,21 +362,6 @@ class World:
 # VISUALIZATION FUNCTIONS
 ###############################################################################
 
-<<<<<<< HEAD
-def population_size_figure(days_list: List[int], pred_pop_list: List[int],
-                           prey_pop_list: List[int]):
-    """Create population size plot."""
-    plt.figure(figsize=(10, 6))
-    plt.plot(days_list, prey_pop_list, label="Prey Population", color="green")
-    plt.plot(days_list, pred_pop_list, label="Predator Population", color="red")
-    plt.xlabel("Day")
-    plt.ylabel("Population Size")
-    plt.title("Prey vs Predator Population Over Time")
-    plt.legend()
-    plt.xticks(range(0, 1001, 50))
-    plt.grid(True)
-    plt.show()
-=======
 def setup_beautiful_plot(figsize=(12, 8)):
     """Setup a beautiful plot with modern styling."""
     plt.style.use('seaborn-v0_8-darkgrid')
@@ -575,58 +436,10 @@ def population_size_figure(days_list: List[int], pred_pop_list: List[int],
     filename = "seasonal_population_size_fig.png" if seasons_list else "population_size_fig.png"
     plt.savefig(filename, dpi=300, bbox_inches='tight')
     # plt.show()
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
 
 
 def prey_fitness_figure(avg_prey_fitness_list: List[float],
                         avg_prey_fitness_no_pred_list: List[float],
-<<<<<<< HEAD
-                        days_list: List[int]):
-    """Create prey fitness comparison plot."""
-    plt.figure(figsize=(10, 6))
-    plt.plot(days_list, avg_prey_fitness_list, color="blue",
-             label="With Predators")
-    plt.plot(days_list, avg_prey_fitness_no_pred_list, color="orange",
-             label="Without Predators")
-    plt.xlabel("Day")
-    plt.ylabel("Average Prey Fitness")
-    plt.title("Average Prey Fitness Over Time")
-    plt.legend()
-    plt.xticks(range(0, 1001, 50))
-    plt.grid(True)
-    plt.show()
-
-
-def predator_fitness_figure(avg_pred_fitness_list: List[float],
-                            days_list: List[int]):
-    """Create predator fitness plot."""
-    plt.figure(figsize=(10, 6))
-    plt.plot(days_list, avg_pred_fitness_list, label="Predator Avg Fitness")
-    plt.xlabel("Day")
-    plt.ylabel("Average Predator Fitness")
-    plt.title("Average Predator Fitness Over Time")
-    plt.legend()
-    plt.xticks(range(0, 1001, 50))
-    plt.grid(True)
-    plt.show()
-
-
-def mutation_rate_figure(avg_pred_mutrate_list: List[float],
-                         avg_prey_mutrate_list: List[float],
-                         days_list: List[int]):
-    """Create mutation rate comparison plot."""
-    plt.figure(figsize=(10, 6))
-    plt.plot(days_list, avg_prey_mutrate_list, label="Prey Avg Mutation Rate")
-    plt.plot(days_list, avg_pred_mutrate_list,
-             label="Predator Avg Mutation Rate")
-    plt.xlabel("Day")
-    plt.ylabel("Average Mutation Rate (std of fitness noise)")
-    plt.title("Average Mutation Rate Over Time")
-    plt.legend()
-    plt.xticks(range(0, 1001, 50))
-    plt.grid(True)
-    plt.show()
-=======
                         days_list: List[int], seasons_list: List[Season] = None):
     """Create a beautiful prey fitness comparison plot."""
     fig, ax = setup_beautiful_plot()
@@ -757,7 +570,6 @@ def mutation_rate_figure(prey_mutation_rate: List[float], predator_mutation_rate
     filename = "seasonal_mutation_rate_fig.png" if seasons_list else "mutation_rate_fig.png"
     plt.savefig(filename, dpi=300, bbox_inches='tight')
     # plt.show()
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
 
 
 ###############################################################################
@@ -786,11 +598,8 @@ class SimulationRunner:
         self.avg_pred_fitness_list = []
         self.avg_prey_mutrate_list = []
         self.avg_pred_mutrate_list = []
-<<<<<<< HEAD
-=======
         self.grass_list = []
         self.seasons_list = []
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
 
     def track_day(self, day: int, world: World):
         """
@@ -803,27 +612,18 @@ class SimulationRunner:
         self.days_list.append(day)
         self.prey_pop_list.append(len(world.prey_list))
         self.pred_pop_list.append(len(world.predator_list))
-<<<<<<< HEAD
-=======
         self.grass_list.append(world.grass)
 
         # Track seasons if applicable
         if world.seasonal:
             self.seasons_list.append(world.season)
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
 
         # Track prey statistics
         if len(world.prey_list) > 0:
             self.avg_prey_fitness_list.append(
                 np.mean([prey.fitness for prey in world.prey_list])
             )
-<<<<<<< HEAD
-            self.avg_prey_mutrate_list.append(
-                np.mean([prey.clade.mutation_rate for prey in world.prey_list])
-            )
-=======
             self.avg_prey_mutrate_list.append(np.mean([prey.mutation_rate for prey in world.prey_list]))
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
         else:
             self.avg_prey_fitness_list.append(np.nan)
             self.avg_prey_mutrate_list.append(np.nan)
@@ -833,13 +633,7 @@ class SimulationRunner:
             self.avg_pred_fitness_list.append(
                 np.mean([pred.fitness for pred in world.predator_list])
             )
-<<<<<<< HEAD
-            self.avg_pred_mutrate_list.append(
-                np.mean([pred.clade.mutation_rate for pred in world.predator_list])
-            )
-=======
             self.avg_pred_mutrate_list.append(np.mean([pred.mutation_rate for pred in world.predator_list]))
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
         else:
             self.avg_pred_fitness_list.append(np.nan)
             self.avg_pred_mutrate_list.append(np.nan)
@@ -856,21 +650,14 @@ class SimulationRunner:
             world.simulate_day()
 
     def run_control_simulation(self, prey_number: int = 300,
-<<<<<<< HEAD
-                               grass_amount: int = 300) -> List[float]:
-=======
                                grass_amount: int = 300, seasonal: bool = False) -> List[float]:
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
         """
         Run control simulation without predators.
 
         Args:
             prey_number: Initial number of prey
             grass_amount: Initial amount of grass
-<<<<<<< HEAD
-=======
             seasonal: Whether to enable seasonal effects
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
 
         Returns:
             List of average prey fitness values
@@ -878,12 +665,8 @@ class SimulationRunner:
         world_no_pred = World(
             prey_number=prey_number,
             predator_number=0,
-<<<<<<< HEAD
-            grass_amount=grass_amount
-=======
             grass_amount=grass_amount,
             seasonal=seasonal
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
         )
 
         avg_prey_fitness_no_pred_list = []
@@ -904,26 +687,12 @@ class SimulationRunner:
         print(f"Spearman correlation (avg prey fitness vs prey population): "
               f"rho={rho:.3f}, p={pval:.3g}")
 
-<<<<<<< HEAD
-    def plot_all_figures(self, avg_prey_fitness_no_pred_list: List[float]):
-=======
     def plot_all_figures(self, avg_prey_fitness_no_pred_list: List[float], seasonal: bool = False):
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
         """
         Create all visualization plots.
 
         Args:
             avg_prey_fitness_no_pred_list: Control simulation fitness data
-<<<<<<< HEAD
-        """
-        population_size_figure(self.days_list, self.pred_pop_list,
-                               self.prey_pop_list)
-        prey_fitness_figure(self.avg_prey_fitness_list,
-                            avg_prey_fitness_no_pred_list, self.days_list)
-        predator_fitness_figure(self.avg_pred_fitness_list, self.days_list)
-        mutation_rate_figure(self.avg_pred_mutrate_list,
-                             self.avg_prey_mutrate_list, self.days_list)
-=======
             seasonal: Whether seasonal effects are enabled
         """
         seasons = self.seasons_list if seasonal else None
@@ -937,7 +706,6 @@ class SimulationRunner:
 
         if seasonal:
             grass_availability_figure(self.grass_list, self.days_list, seasons)
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
 
 
 ###############################################################################
@@ -949,14 +717,9 @@ def main():
     # Initialize simulation runner
     runner = SimulationRunner(days=1000)
 
-<<<<<<< HEAD
-    # Create world with initial populations
-    world = World(prey_number=300, predator_number=10, grass_amount=300)
-=======
     print("=== Running Standard Simulation ===")
     # Create world with initial populations (standard)
     world = World(prey_number=300, predator_number=10, grass_amount=300, seasonal=False)
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
 
     # Run main simulation
     print("Running main simulation with predators...")
@@ -964,22 +727,12 @@ def main():
 
     # Run control simulation without predators
     print("Running control simulation without predators...")
-<<<<<<< HEAD
-    avg_prey_fitness_no_pred = runner.run_control_simulation()
-=======
     avg_prey_fitness_no_pred = runner.run_control_simulation(seasonal=False)
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
 
     # Analyze results
     runner.analyze_results()
 
     # Create visualizations
-<<<<<<< HEAD
-    print("Generating plots...")
-    runner.plot_all_figures(avg_prey_fitness_no_pred)
-
-    print("Simulation complete!")
-=======
     print("Generating standard plots...")
     runner.plot_all_figures(avg_prey_fitness_no_pred, seasonal=False)
 
@@ -1007,7 +760,6 @@ def main():
     runner.plot_all_figures(avg_prey_fitness_no_pred_seasonal, seasonal=True)
 
     print("All simulations complete!")
->>>>>>> dc58408 (complete simulation by itamar. start of paper by sarit. many figures)
 
 
 if __name__ == '__main__':
