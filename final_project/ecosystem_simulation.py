@@ -649,6 +649,43 @@ class SimulationRunner:
             self.track_day(day, world)
             world.simulate_day()
 
+    def run_simulation_with_added_predators(self, world: World) -> None:
+        """
+        Run the simulation for the specified number of days, then add predators
+        and run for another period of the same length.
+
+        Args:
+            world: World to simulate
+        """
+        print("Running initial simulation phase...")
+        # First phase: run normal simulation
+        for day in range(self.days):
+            self.track_day(day, world)
+            world.simulate_day()
+
+        print(f"Adding 50 new predators after {self.days} days...")
+        # Add predators using the last recorded average fitness and mutation rate
+        if self.avg_pred_fitness_list and not np.isnan(self.avg_pred_fitness_list[-1]):
+            avg_fitness = self.avg_pred_fitness_list[-1]
+        else:
+            avg_fitness = 1.0  # Default fitness if no predators existed
+
+        if self.avg_pred_mutrate_list and not np.isnan(self.avg_pred_mutrate_list[-1]):
+            avg_mutation_rate = self.avg_pred_mutrate_list[-1]
+        else:
+            avg_mutation_rate = 0.1  # Default mutation rate
+
+        added_predators = [Predator(avg_fitness*2, avg_mutation_rate, world) for _ in range(50)]
+        world.predator_list.extend(added_predators)
+        Predator.total_population = len(world.predator_list)
+
+        print("Running second simulation phase with added predators...")
+        # Second phase: run another 1000 days with the added predators
+        for day in range(self.days, self.days * 2):
+            self.track_day(day, world)
+            world.simulate_day()
+
+
     def run_control_simulation(self, prey_number: int = 300,
                                grass_amount: int = 300, seasonal: bool = False) -> List[float]:
         """
@@ -681,11 +718,40 @@ class SimulationRunner:
 
         return avg_prey_fitness_no_pred_list
 
+    def plot_extended_population_figure(self, predator_addition_day: int = None):
+        """
+        Create population plot showing the effect of adding predators.
+
+        Args:
+            predator_addition_day: Day when predators were added (for vertical line)
+        """
+        fig, ax = plt.subplots(figsize=(12, 8))
+
+        # Plot populations
+        ax.plot(self.days_list, self.prey_pop_list, 'g-', label='Prey Population', linewidth=2)
+        ax.plot(self.days_list, self.pred_pop_list, 'r-', label='Predator Population', linewidth=2)
+
+        # Add vertical line at predator addition point
+        if predator_addition_day:
+            ax.axvline(x=predator_addition_day, color='black', linestyle='--',
+                       label=f'Predators Added (Day {predator_addition_day})')
+
+        ax.set_xlabel('Days', fontsize=12)
+        ax.set_ylabel('Population Size', fontsize=12)
+        ax.set_title('Population Dynamics: Before and After Adding Predators', fontsize=14)
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+
+        plt.tight_layout()
+        filename = "predator_predator_adition_fig"
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+
     def analyze_results(self):
         """Analyze and print correlation statistics."""
         rho, pval = spearmanr(self.avg_prey_fitness_list, self.prey_pop_list)
         print(f"Spearman correlation (avg prey fitness vs prey population): "
               f"rho={rho:.3f}, p={pval:.3g}")
+
 
     def plot_all_figures(self, avg_prey_fitness_no_pred_list: List[float], seasonal: bool = False):
         """
@@ -714,53 +780,32 @@ class SimulationRunner:
 
 def main():
     """Main entry point for the simulation."""
-    # Initialize simulation runner
+    # Initialize simulation runner for extended simulation (2000 days total)
     runner = SimulationRunner(days=1000)
 
-    print("=== Running Standard Simulation ===")
-    # Create world with initial populations (standard)
+    print("=== Running Extended Simulation with Added Predators ===")
+    # Create world with initial populations
     world = World(prey_number=300, predator_number=10, grass_amount=300, seasonal=False)
 
-    # Run main simulation
-    print("Running main simulation with predators...")
-    runner.run_simulation(world)
+    # Run extended simulation
+    print("Running simulation with predator addition...")
+    runner.run_simulation_with_added_predators(world)
 
-    # Run control simulation without predators
-    print("Running control simulation without predators...")
-    avg_prey_fitness_no_pred = runner.run_control_simulation(seasonal=False)
+    # Create visualization
+    runner.plot_extended_population_figure(predator_addition_day=1000)
 
-    # Analyze results
-    runner.analyze_results()
+    # Also create a control simulation for comparison
+    print("Running control simulation without added predators...")
+    control_runner = SimulationRunner(days=2000)  # Run for same total time
+    control_world = World(prey_number=300, predator_number=10, grass_amount=300, seasonal=False)
+    control_runner.run_simulation(control_world)
 
-    # Create visualizations
-    print("Generating standard plots...")
-    runner.plot_all_figures(avg_prey_fitness_no_pred, seasonal=False)
-
-    print("\n=== Running Seasonal Simulation ===")
-    # Reset for seasonal simulation
-    runner.reset_tracking()
-
-    # Create seasonal world
-    seasonal_world = World(prey_number=300, predator_number=10, grass_amount=300, seasonal=True)
-
-    # Run seasonal simulation
-    print("Running seasonal simulation with predators...")
-    runner.run_simulation(seasonal_world)
-
-    # Run seasonal control simulation
-    print("Running seasonal control simulation without predators...")
-    avg_prey_fitness_no_pred_seasonal = runner.run_control_simulation(seasonal=True)
-
-    # Analyze seasonal results
-    print("Seasonal simulation results:")
-    runner.analyze_results()
-
-    # Create seasonal visualizations
-    print("Generating seasonal plots...")
-    runner.plot_all_figures(avg_prey_fitness_no_pred_seasonal, seasonal=True)
-
-    print("All simulations complete!")
+    print(f"Simulation completed. Total days simulated: {len(runner.days_list)}")
+    print(f"Final prey population (with added predators): {runner.prey_pop_list[-1]}")
+    print(f"Final predator population (with added predators): {runner.pred_pop_list[-1]}")
+    print(f"Final prey population (control): {control_runner.prey_pop_list[-1]}")
+    print(f"Final predator population (control): {control_runner.pred_pop_list[-1]}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
