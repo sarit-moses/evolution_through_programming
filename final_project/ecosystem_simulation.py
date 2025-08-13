@@ -135,8 +135,8 @@ class Organism:
         """
         self.age = 1
         self.energy = 5
-        self.fitness = max(0.0 , fitness)
         self.mutation_rate = mutation_rate
+        self.fitness = max(0.0 , fitness + np.random.normal(0, self.mutation_rate))
         self.world = world
         self.eaten = 0
         self.energy_consumption = 1
@@ -149,7 +149,7 @@ class Organism:
     def reproduce(self) -> 'Organism':
         """Create offspring from this organism."""
         return type(self)(
-            self.fitness + np.random.normal(loc=0, scale=0.1), max(0, self.mutation_rate + np.random.normal(0, 0.01)),
+            self.fitness, max(0, self.mutation_rate + np.random.normal(0, 0.01)),
             world=self.world
         )
 
@@ -361,6 +361,7 @@ class World:
 ###############################################################################
 # VISUALIZATION FUNCTIONS
 ###############################################################################
+FIGURES_PATH = "C:/Users/ITAMARN/Weizmann Institute Dropbox/Itamar Nini/courses/Evolution through programing/evolution_through_programming/final_project/figures/"
 
 def setup_beautiful_plot(figsize=(12, 8)):
     """Setup a beautiful plot with modern styling."""
@@ -433,8 +434,8 @@ def population_size_figure(days_list: List[int], pred_pop_list: List[int],
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
 
-    filename = "seasonal_population_size_fig.png" if seasons_list else "population_size_fig.png"
-    plt.savefig(filename, dpi=300, bbox_inches='tight')
+    # filename = "seasonal_population_size_fig.png" if seasons_list else "population_size_fig.png"
+    plt.savefig(FIGURES_PATH + "population_size_fig.png", dpi=300, bbox_inches='tight')
     # plt.show()
 
 
@@ -467,8 +468,8 @@ def prey_fitness_figure(avg_prey_fitness_list: List[float],
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
 
-    filename = "seasonal_fitness_fig.png" if seasons_list else "fitness_fig.png"
-    plt.savefig(filename, dpi=300, bbox_inches='tight')
+    # filename = "seasonal_fitness_fig.png" if seasons_list else "fitness_fig.png"
+    plt.savefig(FIGURES_PATH + "fitness_fig.png", dpi=300, bbox_inches='tight')
     # plt.show()
 
 
@@ -499,7 +500,7 @@ def predator_fitness_figure(avg_pred_fitness_list: List[float],
     plt.tight_layout()
 
     filename = "seasonal_predator_fitness_fig.png" if seasons_list else "predator_fitness_fig.png"
-    plt.savefig(filename, dpi=300, bbox_inches='tight')
+    plt.savefig(FIGURES_PATH + "predator_fitness_fig.png", dpi=300, bbox_inches='tight')
     # plt.show()
 
 
@@ -536,6 +537,7 @@ def grass_availability_figure(grass_list: List[int], days_list: List[int],
 def mutation_rate_figure(prey_mutation_rate: List[float], predator_mutation_rate: List[float],
                          days_list: List[int] = None, seasons_list: List[Season] = None):
     """Create a beautiful mutation rate evolution plot."""
+    print("*************** Im Here***********************")
     fig, ax = setup_beautiful_plot()
 
     # Create days list if not provided
@@ -567,8 +569,8 @@ def mutation_rate_figure(prey_mutation_rate: List[float], predator_mutation_rate
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
 
-    filename = "seasonal_mutation_rate_fig.png" if seasons_list else "mutation_rate_fig.png"
-    plt.savefig(filename, dpi=300, bbox_inches='tight')
+    # filename = "seasonal_mutation_rate_fig.png" if seasons_list else "mutation_rate_fig.png"
+    plt.savefig(FIGURES_PATH + "mutation_rate_fig.png", dpi=300, bbox_inches='tight')
     # plt.show()
 
 
@@ -675,7 +677,7 @@ class SimulationRunner:
         else:
             avg_mutation_rate = 0.1  # Default mutation rate
 
-        added_predators = [Predator(avg_fitness*2, avg_mutation_rate, world) for _ in range(50)]
+        added_predators = [Predator(avg_fitness+1, avg_mutation_rate, world) for _ in range(100)]
         world.predator_list.extend(added_predators)
         Predator.total_population = len(world.predator_list)
 
@@ -707,7 +709,7 @@ class SimulationRunner:
         )
 
         avg_prey_fitness_no_pred_list = []
-        for day in range(self.days):
+        for day in range(2000):
             if len(world_no_pred.prey_list) > 0:
                 avg_prey_fitness_no_pred_list.append(
                     np.mean([prey.fitness for prey in world_no_pred.prey_list])
@@ -780,31 +782,28 @@ class SimulationRunner:
 
 def main():
     """Main entry point for the simulation."""
-    # Initialize simulation runner for extended simulation (2000 days total)
+    # 1) Run the extended sim (predators added halfway)
     runner = SimulationRunner(days=1000)
-
     print("=== Running Extended Simulation with Added Predators ===")
-    # Create world with initial populations
     world = World(prey_number=300, predator_number=10, grass_amount=300, seasonal=False)
-
-    # Run extended simulation
-    print("Running simulation with predator addition...")
     runner.run_simulation_with_added_predators(world)
 
-    # Create visualization
+    # 2) Make the before/after population plot (optional)
     runner.plot_extended_population_figure(predator_addition_day=1000)
 
-    # Also create a control simulation for comparison
-    print("Running control simulation without added predators...")
-    control_runner = SimulationRunner(days=2000)  # Run for same total time
-    control_world = World(prey_number=300, predator_number=10, grass_amount=300, seasonal=False)
-    control_runner.run_simulation(control_world)
+    # 3) Run the control (NO predators) to get the comparison fitness series
+    print("Running control simulation without predators...")
+    avg_prey_fitness_no_pred = runner.run_control_simulation(
+        prey_number=300, grass_amount=300, seasonal=False
+    )
 
+    # 4) Now this has what plot_all_figures needs ✅
+    runner.plot_all_figures(avg_prey_fitness_no_pred_list=avg_prey_fitness_no_pred,
+                            seasonal=False)
     print(f"Simulation completed. Total days simulated: {len(runner.days_list)}")
     print(f"Final prey population (with added predators): {runner.prey_pop_list[-1]}")
     print(f"Final predator population (with added predators): {runner.pred_pop_list[-1]}")
-    print(f"Final prey population (control): {control_runner.prey_pop_list[-1]}")
-    print(f"Final predator population (control): {control_runner.pred_pop_list[-1]}")
+
 
 
 if __name__ == "__main__":
