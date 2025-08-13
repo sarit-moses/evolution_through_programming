@@ -709,7 +709,7 @@ class SimulationRunner:
         )
 
         avg_prey_fitness_no_pred_list = []
-        for day in range(2000):
+        for day in range(self.days):
             if len(world_no_pred.prey_list) > 0:
                 avg_prey_fitness_no_pred_list.append(
                     np.mean([prey.fitness for prey in world_no_pred.prey_list])
@@ -745,8 +745,8 @@ class SimulationRunner:
         ax.grid(True, alpha=0.3)
 
         plt.tight_layout()
-        filename = "predator_predator_adition_fig"
-        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        filename = "predator_predator_addition_fig"
+        plt.savefig(FIGURES_PATH+"predator_predator_addition_fig" , dpi=300, bbox_inches='tight')
 
     def analyze_results(self):
         """Analyze and print correlation statistics."""
@@ -782,27 +782,29 @@ class SimulationRunner:
 
 def main():
     """Main entry point for the simulation."""
-    # 1) Run the extended sim (predators added halfway)
+
     runner = SimulationRunner(days=1000)
     print("=== Running Extended Simulation with Added Predators ===")
     world = World(prey_number=300, predator_number=10, grass_amount=300, seasonal=False)
-    runner.run_simulation_with_added_predators(world)
-
-    # 2) Make the before/after population plot (optional)
-    runner.plot_extended_population_figure(predator_addition_day=1000)
-
-    # 3) Run the control (NO predators) to get the comparison fitness series
-    print("Running control simulation without predators...")
+    runner.run_simulation(world = world)
     avg_prey_fitness_no_pred = runner.run_control_simulation(
         prey_number=300, grass_amount=300, seasonal=False
     )
-
-    # 4) Now this has what plot_all_figures needs ✅
     runner.plot_all_figures(avg_prey_fitness_no_pred_list=avg_prey_fitness_no_pred,
                             seasonal=False)
+    print("Running control simulation without predators...")
+
+
     print(f"Simulation completed. Total days simulated: {len(runner.days_list)}")
     print(f"Final prey population (with added predators): {runner.prey_pop_list[-1]}")
     print(f"Final predator population (with added predators): {runner.pred_pop_list[-1]}")
+
+
+    runner_with_added_predators=SimulationRunner(days=1000)
+    world_for_added_predators = World(prey_number=300, predator_number=10, grass_amount=300, seasonal=False)
+    runner_with_added_predators.run_simulation_with_added_predators(world_for_added_predators)
+    runner_with_added_predators.plot_extended_population_figure(predator_addition_day=1000)
+
 
 
 
